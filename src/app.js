@@ -11,11 +11,11 @@
 
  
 require("./xyz")
-const {x, calculateSum} =  require("./sum")
+const calculateSum =  require("./sum")
 const a = 10;
 const b = 20;
 const y = 25;
 console.log(y);
 
 calculateSum(a,b);
-console.log(x)
+

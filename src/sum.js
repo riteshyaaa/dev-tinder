@@ -5,4 +5,4 @@ function calculateSum (a,b){
     console.log(result);
 
 }
-module.exports = {x,calculateSum};
+module.exports = calculateSum
