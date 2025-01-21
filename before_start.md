@@ -83,3 +83,7 @@ Reading the query params in the routes
 
 Reading the dynamic routes
 
+Create a free cluster on mongoDb official website (Mongo Atlas)
+install mongoose library
+connect your application to database - "connection-url"/devTinder 
+call the ConnectDb function and connect to your database before your application is started on server 7777
