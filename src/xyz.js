@@ -1,1 +1,0 @@
-console.log("require code is runniing xyz.jsnpm run start")

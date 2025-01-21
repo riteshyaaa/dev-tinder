@@ -1,40 +1,29 @@
-// const express = require("express");
-// const app = express();
-
-// app.get("/", (req, res) => {
-//   res.send("App is running on dashboard");
-// });
-// app.use("/hello", (req, res) => {
-//   res.send("Hello from /hello");
-// });
-// app.use("/login", (req, res) => {
-//     res.send("user login")
-//     })
-
-// app.listen(3000, () => {
-//   console.log("Server is successfully listing at port 3000");
-// });
-
-
-
-
-const express = require('express');
+const express = require("express");
 const app = express();
-const routes = require('./routes');
 
-app.use("/", routes);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+
+
+//Dynamic routing 
+app.get("/user", (req, res) => {
+  const userId = req.query;
+  console.log(userId);
+  res.send({ firstName: "Ritesh", lastName: "yadav" });
 });
 
+app.post("/user", (req, res) => {
+  res.send("Successfully data seved to database");
+});
 
-require("./xyz");
-const calculateSum = require("./sum");
-const a = 10;
-const b = 20;
-const y = 25;
-console.log(y);
+app.delete("/user", (req, res) => {
+  res.send("Deleted successfully");
+});
 
-calculateSum(a, b);
+// This will match all the HTTP method api which start with /user 
+app.use("/user", (req, res) => {
+  res.send("User data")
+})
+
+app.listen(3000, () => {
+  console.log("Server is successfully listing at port 3000");
+});
