@@ -22,6 +22,34 @@ try{
 }
 })
 
+//Get One user from the database by their email address 
+//app.get is for to get the user from database 
+app.get("/user", async (req, res) => {
+ const userEmail= req.body.email;
+  try {
+    const user = await User.findOne({email:userEmail})
+  if(!userEmail)return res.status(404).send("User does not exist");
+  res.send(user);
+  }catch(err){
+    res.status(400).send("Server error: " + err.message)
+  }
+})
+
+//Feed api for getting users from the database 
+
+app.get("/feed", async (req,res) => {
+  try{
+    const users = await User.find({})
+    if(!users)return res.status(404).send("No user exist");
+    res.send(users);
+
+  }catch(err){
+    res.status(400).send("Server error: " +err.message)
+  }
+})
+  
+   
+
 
 connectDB()
   .then(() => {
