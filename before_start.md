@@ -99,3 +99,7 @@ find user from database by using email query
 find One user from database
 find all users from database by passing empty {} query
 find user by findByid me
+findByIdAndUpdate
+explore mongoose models and use them in your application
+what are the option in model.findOneAndUpdate. Explore more about it 
+api - update the user by email
