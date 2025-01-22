@@ -91,3 +91,6 @@ Create a UserSchema and To use this schema in your application, you would requir
 create a post /signup api to add data to your database
 Push some documents using api calls from postman 
 Error handling with try and catch
+JS object and json (difference)
+add express.json middleware to your application 
+Make your sign up api dynamic to recieve data from postman (request)
