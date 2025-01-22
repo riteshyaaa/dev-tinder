@@ -45,12 +45,12 @@ app.get("/feed", async (req, res) => {
   }
 });
 
-// delete all users from the database
+// delete users from the database
 app.delete("/delete", async (req, res) => {
-  const userEmail = req.body.email;
+  const userId = req.body.userId;
   try {
-    const user = await User.deleteMany({});
-    if (!userEmail) return res.send("User are deleted successfully");
+    const user = await User.findByIdAndDelete(userId);
+  res.send("User are deleted successfully");
 
     res.status(404).send("Something went wrong");
   } catch (err) {
@@ -61,12 +61,13 @@ app.delete("/delete", async (req, res) => {
 
 
 //find user by findById method
-app.get("/exists", async (req, res) => {
+app.get("/find", async (req, res) => {
+const userId = req.body.userId;
+const data = req.body;
 
   try {
-    const user = await User.findById('6790e630fd67aee9a15d3fdf','lastName ');
-    if (!user) return res.status(404).send("User does not exist");
-    res.send(user);
+    const user = await User.findByIdAndUpdate(userId,data);
+    res.send("User are updated successfully");
   } catch (err) {
     res.status(400).send("Server error: " + err.message);
   }

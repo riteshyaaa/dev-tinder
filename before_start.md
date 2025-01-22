@@ -98,3 +98,4 @@ create get /feed api to get user information from database
 find user from database by using email query 
 find One user from database
 find all users from database by passing empty {} query
+find user by findByid me
