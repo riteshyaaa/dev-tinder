@@ -87,3 +87,7 @@ Create a free cluster on mongoDb official website (Mongo Atlas)
 install mongoose library
 connect your application to database - "connection-url"/devTinder 
 call the ConnectDb function and connect to your database before your application is started on server 7777
+Create a UserSchema and To use this schema in your application, you would require it and use it with mongoose.model() 
+create a post /signup api to add data to your database
+Push some documents using api calls from postman 
+Error handling with try and catch
