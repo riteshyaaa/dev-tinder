@@ -84,29 +84,58 @@ Reading the query params in the routes
 Reading the dynamic routes
 
 Create a free cluster on mongoDb official website (Mongo Atlas)
+
 install mongoose library
+
 connect your application to database - "connection-url"/devTinder 
+
 call the ConnectDb function and connect to your database before your application is started on server 7777
-Create a UserSchema and To use this schema in your application, you would require it and use it with mongoose.model() 
+
+Create a UserSchema and To use this schema in your application, you would require it and use it with mongoose.model()
+
 create a post /signup api to add data to your database
+
 Push some documents using api calls from postman 
+
 Error handling with try and catch
 JS object and json (difference)
 add express.json middleware to your application 
+
 Make your sign up api dynamic to recieve data from postman (request)
+
 create get /feed api to get user information from database
+
 find user from database by using email query 
+
 find One user from database
+
 find all users from database by passing empty {} query
+
 find user by findByid me
+
 findByIdAndUpdate
+
 explore mongoose models and use them in your application
+
 what are the option in model.findOneAndUpdate. Explore more about it 
+
 api - update the user by email
+
 Explore schematype from the documentation
+
 add required, max, min, maxLength, minLength, trim, lowercase, 
+
 add default
 created custom validation function for gender 
+
 Imporove the Db schema - Put all the appropriate validations on each field schema 
+
 Add timStamp to the user schema 
+
 Data sanitizing - Add Api validation for each field
+
+install validator library 
+
+-explore validator library and use validator function for password, photoUrl and email fields
+
+-add findOne for checking if user email already exists then don't register

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+var validator = require("validator");
 
 const UserSchema = new mongoose.Schema(
   {
@@ -17,13 +18,22 @@ const UserSchema = new mongoose.Schema(
       lowercase: true,
       required: true,
       trim: true,
+      validate(value) {
+        if (!validator.isEmail(value)) {
+          throw new Error("Invalid email address"+ value);
+        }
+      },
     },
-
     password: {
       type: String,
       required: true,
       minLength: 8,
       maxLength: 16,
+      validate(value) {
+        if (!validator.isStrongPassword(value)) {
+          throw new Error("Use a strong password");
+        }
+      },
       // match:/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}/
     },
 
@@ -38,10 +48,10 @@ const UserSchema = new mongoose.Schema(
       required: true,
       lowercase: true,
       // enum:["male", "female", "other"]
-      //custom validation 
+      //custom validation
       validate(value) {
         if (!["male", "female", "Other"].includes(value)) {
-          throw new Error("Invalid value for gender");
+          throw new Error("Invalid value for gender"+ value);
         }
       },
     },
@@ -49,6 +59,11 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default:
         "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png",
+        validate(value) {
+            if (!validator.isURL(value)) {
+              throw new Error("Invalid Url address"+ value);
+            }
+          },
     },
     about: {
       type: String,

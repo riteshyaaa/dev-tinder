@@ -2,21 +2,29 @@ const express = require("express");
 const connectDB = require("./config/database.js");
 const app = express();
 const User = require("./models/user.js");
-var validator = require("validator");
 
 app.use(express.json());
 
 //adding user in database
-app.post("/signup", async (req, res) => {
+app.post("/user", async (req, res) => {
   // we have to create a instance of User schema
-  const user = new User(req.body);
-  try {
-    await user.save();
-    res.send("user is added successfully!");
-  } catch (err) {
-    res.status(400).send("Error saving data:" + err.message);
+   const user = req.body
+   try {
+      // Check if the email already exists
+      const existingUser = await User.findOne({ email: user.email });
+      if (existingUser) {
+        return res.send('Email is already registered. Please use a different email.');
+      }
+  
+      // If email does not exist, proceed with creating the user
+      const newUser = new User(req.body);
+      await newUser.save();
+     res.send('User registered successfully:');
+    } catch (error) {
+      res.send('Error during signup:'+ error.message);
+    }
   }
-});
+);
 
 //Get One user from the database by their email address
 //app.get is for to get the user from database
