@@ -2,6 +2,7 @@ const express = require("express");
 const connectDB = require("./config/database.js");
 const app = express();
 const User = require("./models/user.js");
+var validator = require('validator');
 
 app.use(express.json());
 
@@ -31,9 +32,6 @@ app.get("/user", async (req, res) => {
   }
 });
 
-
-
-
 //Feed api for getting users from the database
 app.get("/feed", async (req, res) => {
   try {
@@ -58,15 +56,17 @@ app.delete("/delete", async (req, res) => {
   }
 });
 
-
-
 //find user by findById method
-app.get("/find", async (req, res) => {
+app.patch("/find", async (req, res) => {
 const userId = req.body.userId;
 const data = req.body;
 
   try {
-    const user = await User.findByIdAndUpdate(userId,data);
+    const user = await User.findByIdAndUpdate({_id:userId},data,{
+     returnDocument: "after",
+      runValidators:true
+    });
+  
     res.send("User are updated successfully");
   } catch (err) {
     res.status(400).send("Server error: " + err.message);
