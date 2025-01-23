@@ -2,10 +2,9 @@ const express = require("express");
 const connectDB = require("./config/database.js");
 const app = express();
 const User = require("./models/user.js");
-var validator = require('validator');
+var validator = require("validator");
 
 app.use(express.json());
-
 
 //adding user in database
 app.post("/signup", async (req, res) => {
@@ -44,11 +43,11 @@ app.get("/feed", async (req, res) => {
 });
 
 // delete users from the database
-app.delete("/delete", async (req, res) => {
+app.delete("/user", async (req, res) => {
   const userId = req.body.userId;
   try {
     const user = await User.findByIdAndDelete(userId);
-  res.send("User are deleted successfully");
+    res.send("User are deleted successfully");
 
     res.status(404).send("Something went wrong");
   } catch (err) {
@@ -57,16 +56,32 @@ app.delete("/delete", async (req, res) => {
 });
 
 //find user by findById method
-app.patch("/find", async (req, res) => {
-const userId = req.body.userId;
-const data = req.body;
+app.patch("/user", async (req, res) => {
+  const userId = req.body.userId;
+  const data = req.body;
 
   try {
-    const user = await User.findByIdAndUpdate({_id:userId},data,{
-     returnDocument: "after",
-      runValidators:true
+    const ALLOWED_USER = [
+      "userId",
+      "photoUrl",
+      "about",
+      "age",
+      "skills",
+      "gender",
+    ];
+    const isUpdateAllowed = Object.keys(data).every((k) =>
+      ALLOWED_USER.includes(k)
+    );
+    if (!isUpdateAllowed) {
+      throw new Error ("User not allowed")}
+      if(data.skills.length >10){
+        throw new Error ("Skills should not be more than 10");
+      }
+    const user = await User.findByIdAndUpdate({ _id: userId }, data, {
+      returnDocument: "after",
+      runValidators: true,
     });
-  
+    // console.log(user);
     res.send("User are updated successfully");
   } catch (err) {
     res.status(400).send("Server error: " + err.message);

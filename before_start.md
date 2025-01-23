@@ -109,3 +109,4 @@ add default
 created custom validation function for gender 
 Imporove the Db schema - Put all the appropriate validations on each field schema 
 Add timStamp to the user schema 
+Data sanitizing - Add Api validation for each field
