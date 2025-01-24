@@ -2,29 +2,49 @@ const express = require("express");
 const connectDB = require("./config/database.js");
 const app = express();
 const User = require("./models/user.js");
+const { validateSignUpdata } = require("./utils/validation.js");
+const bcrypt = require("bcrypt");
 
 app.use(express.json());
 
-//adding user in database
+//Register user
 app.post("/user", async (req, res) => {
-  // we have to create a instance of User schema
-   const user = req.body
-   try {
-      // Check if the email already exists
-      const existingUser = await User.findOne({ email: user.email });
-      if (existingUser) {
-        return res.send('Email is already registered. Please use a different email.');
-      }
-  
-      // If email does not exist, proceed with creating the user
-      const newUser = new User(req.body);
-      await newUser.save();
-     res.send('User registered successfully:');
-    } catch (error) {
-      res.send('Error during signup:'+ error.message);
-    }
+  try {
+    //validate the user data
+    validateSignUpdata(req);
+    const { firstName, lastName, email, password, gender, age } = req.body;
+
+    //Encrypt the password
+    const encryptedPassword = await bcrypt.hash(password, 10);
+    console.log(encryptedPassword)
+    const user = new User({
+      firstName,
+      lastName,
+      email,
+      password: encryptedPassword,
+      gender,
+      age,
+    });
+    await user.save();
+    res.send("User registered successfully:");
+  } catch (error) {
+    res.send("Error during signup:" + error.message);
   }
-);
+});
+app.post("/login",async(req,res) => {
+  try {
+    const {email,password} = req.body;
+    //validating email address
+    if(!validator.isEmail(email))
+      throw new Error("Invalid email");
+       //varifying user password is correct or not 
+       const dcryptedPassword = await bcrypt.compare(password,);
+
+    const user = await User.findOne({email:email, password:dcryptedPassword});
+  } catch (error) {
+    res.status.send(" error during loging " + error.message)
+  }
+})
 
 //Get One user from the database by their email address
 //app.get is for to get the user from database
@@ -81,10 +101,11 @@ app.patch("/user", async (req, res) => {
       ALLOWED_USER.includes(k)
     );
     if (!isUpdateAllowed) {
-      throw new Error ("User not allowed")}
-      if(data.skills.length >10){
-        throw new Error ("Skills should not be more than 10");
-      }
+      throw new Error("User not allowed");
+    }
+    if (data.skills.length > 10) {
+      throw new Error("Skills should not be more than 10");
+    }
     const user = await User.findByIdAndUpdate({ _id: userId }, data, {
       returnDocument: "after",
       runValidators: true,

@@ -139,3 +139,7 @@ install validator library
 -explore validator library and use validator function for password, photoUrl and email fields
 
 -add findOne for checking if user email already exists then don't register
+
+- Validate the Sign Up Api 
+- install the bcrypt library
+- encrypt the password and store user with encrypted password
