@@ -143,3 +143,5 @@ install validator library
 - Validate the Sign Up Api 
 - install the bcrypt library
 - encrypt the password and store user with encrypted password
+- created login api 
+- compare the password and throw error if email and password are invalid
