@@ -23,17 +23,18 @@ Two type of export and import followed in Node js
    Newer way
    Async
 
-// NOTES:how can setup mongodb in your project
+ 
+ NOTES:how can setup mongodb in your project
 
-// - go to mongodb website
-// - create a Mo cluster
-// - create a user
-// - get connection string
-// - download mongodb compass
- // Create a database
-// INstall mongodb package
-// Create a connection from code
-// Documents CRUD - CReate, REad, Update, Delete
+ - go to mongodb website
+ - create a Mo cluster
+ - create a user
+ - get connection string
+- download mongodb compass
+  Create a database
+ INstall mongodb package
+ Create a connection from code
+ Documents CRUD - CReate, REad, Update, Delete
 
 //Homework
 
@@ -145,3 +146,12 @@ install validator library
 - encrypt the password and store user with encrypted password
 - created login api 
 - compare the password and throw error if email and password are invalid
+- install cookie parser
+- send a dummy cookie to the server 
+- create a Get /profile api and check that if you get cookie back as req.cookie
+- install jsonWebToken libarary and explore the library
+- In login api, after email and password validation, create a JWT token and send it to the user cookie 
+- read the cookie inside the user and find looged in user 
+- userAuth middleware
+- add userAuth middleware to /profile api and sedconnectionRequest api 
+- set  the expiry jwt token and cookies to 7 Days
