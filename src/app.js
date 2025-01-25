@@ -6,7 +6,7 @@ const { validateSignUpdata } = require("./utils/validation.js");
 const bcrypt = require("bcrypt");
 var validator = require("validator");
 const cookieParser = require("cookie-parser");
-const jwt = require("jsonwebtoken");
+
 const { userAuth } = require("./middlewares/auth.js");
 
 app.use(express.json());
@@ -40,22 +40,27 @@ app.post("/signUp", async (req, res) => {
 app.post("/logIn", async (req, res) => {
   try {
     const { email, password } = req.body;
+
     //validating email address
     if (!validator.isEmail(email)) throw new Error("Invalid email address");
     //checking if user exist or not
     const user = await User.findOne({ email: email });
+
     if (!user) throw new Error("Invalid credentials");
     //varifying user password is correct or not
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
+    
     if (isPasswordValid) {
       //create JWT token
-      const token = jwt.sign({ _id: user._id }, "Riteshy@dav89", {expiresIn: '7d'});
+      const token = await user.getJWT();
       if (!token) {
         throw new Error("token not found");
       }
 
       // add token to cookie and send back to the user
-      res.cookie("token", token,{ expires: new Date(Date.now() + 7*24*3600000)});
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 7 * 24 * 3600000),
+      });
 
       res.send("login successfull");
     } else {
@@ -65,34 +70,29 @@ app.post("/logIn", async (req, res) => {
     res.status(400).send(" error during loging " + error.message);
   }
 });
-app.get("/profile", userAuth, async(req, res) => {
+app.get("/profile", userAuth, async (req, res) => {
   try {
-  const user = req.user;
-  if(!user) throw new Error("user not found")
+    const user = req.user;
+    if (!user) throw new Error("user not found");
 
-   console.log("user successfully logged in ")
-   res.send(user)
-
+    console.log("user successfully logged in ");
+    res.send(user);
   } catch (error) {
     res.status(400).send(" error during loging " + error.message);
   }
 });
 
-app.get("/sendConnectionRequest", userAuth, async(req,res) => {
+app.get("/sendConnectionRequest", userAuth, async (req, res) => {
   try {
-
     const user = req.user;
-    const {firstName} = user;
+    const { firstName } = user;
     console.log("Request sent successfully ");
 
-    res.send(firstName+ " made a connection reaquest")
-    
+    res.send(firstName + " made a connection reaquest");
   } catch (err) {
-    res.status(400).send(" error during logging" +err.message);
-
-    
+    res.status(400).send(" error during logging" + err.message);
   }
-})
+});
 
 // //Get One user from the database by their email address
 // //app.get is for to get the user from database

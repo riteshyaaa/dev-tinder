@@ -155,3 +155,4 @@ install validator library
 - userAuth middleware
 - add userAuth middleware to /profile api and sedconnectionRequest api 
 - set  the expiry jwt token and cookies to 7 Days
+- created a UserSchema method for getJWT and validatePassword 

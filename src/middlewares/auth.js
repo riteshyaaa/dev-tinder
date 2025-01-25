@@ -5,12 +5,13 @@ const jwt = require("jsonwebtoken");
 const userAuth = async (req, res, next) => {
   //read token from req cookie
   const { token } = req.cookies;
+
   if(!token) {
  return res.status(401).send("Token is required to access this page");
  }
 
   //if token is valid then send user profile
-  const decodedObj = jwt.verify(token, "Riteshy@dav89");
+  const decodedObj =await jwt.verify(token, "Riteshy@dav89");
 
   if (!decodedObj) return res.status(401).send("Unauthoreized token");
   //find the user by _id
