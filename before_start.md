@@ -156,3 +156,10 @@ install validator library
 - add userAuth middleware to /profile api and sedconnectionRequest api 
 - set  the expiry jwt token and cookies to 7 Days
 - created a UserSchema method for getJWT and validatePassword 
+- Explore the Tinder Api
+- create a list of api you think in tinder 
+- group multiple routes with their related router
+- Read documentation of express.router 
+- create routes folder for managing  auth, profile,and request routers
+- create authRouter, profileRouter and requestRouter 
+- import router in app.js
