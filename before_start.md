@@ -163,3 +163,7 @@ install validator library
 - create routes folder for managing  auth, profile,and request routers
 - create authRouter, profileRouter and requestRouter 
 - import router in app.js
+- create a Get profile/view api method 
+- create a patch profile/edit api 
+- create patch profile /password api => forgot password 
+- make sure you validate your data in every post patch request method 
