@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 const validator = require("validator");
 const jwt = require("jsonwebtoken");
-
 const bcrypt = require("bcrypt");
 
 const UserSchema = new mongoose.Schema(
@@ -58,7 +57,7 @@ const UserSchema = new mongoose.Schema(
       },
     },
     photoUrl: {
-      type: String, 
+      type: String,
       default:
         "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_640.png",
       validate(value) {
@@ -80,23 +79,23 @@ const UserSchema = new mongoose.Schema(
 );
 
 UserSchema.methods.getJWT = async function () {
-
   const user = this;
   const token = jwt.sign({ _id: user._id }, "Riteshy@dav89", {
     expiresIn: "7D",
-  }
- 
-);
+  });
 
   return token;
 };
 
-UserSchema.methods.validatePassword= async function(passwordInputByUser){
+UserSchema.methods.validatePassword = async function (passwordInputByUser) {
   const user = this;
-  const passwordHash = user.password 
-  const isPasswordValid = await bcrypt.compare(passwordInputByUser,passwordHash);
+  const passwordHash = user.password;
+  const isPasswordValid = await bcrypt.compare(
+    passwordInputByUser,
+    passwordHash
+  );
   return isPasswordValid;
-} 
+};
 
 // // Export the model so it can be used elsewhere in your application.
 module.exports = mongoose.model("User", UserSchema);
