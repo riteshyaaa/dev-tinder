@@ -167,3 +167,12 @@ install validator library
 - create a patch profile/edit api 
 - create patch profile /password api => forgot password 
 - make sure you validate your data in every post patch request method 
+- created connection Request schema 
+- send a connection Request api 
+- proper validation of the data 
+- think about all the corner cases 
+- $or query and $and query 
+- Read more about indexes 
+- indexes on single field and compound fields
+- indexes uses at email address and fromUserId and toUserId
+- Advantage and disadvantage of indexes 

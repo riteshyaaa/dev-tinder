@@ -21,4 +21,21 @@ const connectionRequestSchema = new mongoose.Schema({
     timestamps:true,
 });
 
+
+connectionRequestSchema.index({fromUserId: 1, toUserId: 1})
+
+// Pre-save middleware to prevent duplicate connection requests with same user
+//pre('save') Middleware: Runs before saving a new connection request.
+ connectionRequestSchema.pre("save", async function(next){
+  const connectionRequest = this;
+  if (connectionRequest.fromUserId.equals(connectionRequest.toUserId)) {
+    const error = new Error('fromUserId and toUserId cannot be the same.');
+    return next(error);
+  }
+
+
+})
+
+
+
 module.exports = mongoose.model("ConnectionRequest", connectionRequestSchema);

@@ -2,7 +2,7 @@ const express = require("express");
 const requestRouter = express.Router();
 const { userAuth } = require("../middlewares/auth.js");
 const ConnectionRequest = require("../models/connectionRequest.js");
-
+const User = require("../models/user")
 
 requestRouter.post(
   "/request/send/:status/:toUserId",
@@ -21,7 +21,9 @@ requestRouter.post(
       
       const toUser = await User.findById(toUserId);
       if (!toUser) {
-        return res.status(404).send( " User not found");
+        return res.status(404).json({
+          Error:"userId not valid",
+        })
       }
 
       const existingRequest = await ConnectionRequest.findOne({
@@ -47,13 +49,12 @@ requestRouter.post(
       });
 
       const data = await connectionRequest.save();
-
       res.json({
         message: "Request sent successfully",
         data,
       });
     } catch (err) {
-      res.status(400).send(" error during logging" + err.message);
+      res.status(400).send(" error during logging " + err.message);
     }
   }
 );
