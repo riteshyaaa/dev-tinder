@@ -77,12 +77,12 @@ requestRouter.post(
         status: "interested",
       });
       if (!connectionRequest) {
-        return res.status(404).send("Request not found or already connected");
+        return res.status(404).send(` ${status} Request not found `);
       }
       connectionRequest.status = status;
       const data = await connectionRequest.save();
       res.json({
-        message: "Request reviewed successfully",
+        message: `Request ${status} successfully`,
         data,
       });
     } catch (err) {
