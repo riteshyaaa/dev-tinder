@@ -176,3 +176,9 @@ install validator library
 - indexes on single field and compound fields
 - indexes uses at email address and fromUserId and toUserId
 - Advantage and disadvantage of indexes 
+- 
+
+- write code with proper validation for  POST/request/review/:status/:requestId
+- Thought Process of - Post and Get
+- Read about ref and populate 
+- Create GET/user/requests/received with all checks
