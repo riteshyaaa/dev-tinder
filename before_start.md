@@ -183,4 +183,5 @@ install validator library
 - Read about ref and populate 
 - Create GET/user/requests/received with all checks
 - Created a GET/user/connections 
-- 
+- Logic for Get /feed api 
+- Explore the $nin, $ne & $and query operators
