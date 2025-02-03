@@ -185,3 +185,4 @@ install validator library
 - Created a GET/user/connections 
 - Logic for Get /feed api 
 - Explore the $nin, $ne & $and query operators
+- added Pagination
