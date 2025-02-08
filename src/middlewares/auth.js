@@ -6,7 +6,7 @@ const userAuth = async (req, res, next) => {
   const { token } = req.cookies;
 
   if (!token) {
-    return res.status(401).send("Token is required to access this page");
+    return res.status(401).send("Please login");
   }
 
   //if token is valid then send user profile

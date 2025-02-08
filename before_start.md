@@ -186,3 +186,4 @@ install validator library
 - Logic for Get /feed api 
 - Explore the $nin, $ne & $and query operators
 - added Pagination
+- add CORS support

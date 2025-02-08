@@ -5,7 +5,7 @@ const User = require("../models/user.js");
 
 const userRouter = express.Router();
 
-const USER_SAFE_DATA = ["firstName", "lastName", "age", "about", "skills"];
+const USER_SAFE_DATA = ["firstName", "lastName", "age", "about", "skills" ,"photoUrl"];
 userRouter.get("/user/requests/received", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
@@ -90,6 +90,7 @@ userRouter.get("/feed", userAuth, async (req, res) => {
       .select(USER_SAFE_DATA)
       .skip(skip)
       .limit(limit);
+     
     res.send(users);
   } catch (err) {
     res.status(400).json({
