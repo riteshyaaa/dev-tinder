@@ -13,7 +13,7 @@ authRouter.post("/signUp", async (req, res) => {
 
     //Encrypt the password
     const encryptedPassword = await bcrypt.hash(password, 10);
-    
+
     const user = new User({
       firstName,
       lastName,
@@ -21,10 +21,14 @@ authRouter.post("/signUp", async (req, res) => {
       password: encryptedPassword,
       gender,
       age,
-     
     });
-    await user.save();
-    res.send("User registered successfully:");
+    const savedUser = await user.save();
+    const token = await user.getJWT();
+    res.cookie("token", token, {
+      expires: new Date(Date.now() + 8 * 3600000),
+    });
+
+    res.json({ message: "User registered successfully:", data: savedUser });
   } catch (error) {
     res.send("Error during signup:" + error.message);
   }

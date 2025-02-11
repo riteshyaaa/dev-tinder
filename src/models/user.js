@@ -42,16 +42,16 @@ const UserSchema = new mongoose.Schema(
       type: Number,
       min: 18,
       max: 50,
-      required: true,
+      
     },
     gender: {
       type: String,
-      required: true,
+     
       lowercase: true,
       // enum:["male", "female", "other"]
       //custom validation
       validate(value) {
-        if (!["male", "female", "Other"].includes(value)) {
+        if (!["male", "female", ""].includes(value)) {
           throw new Error("Invalid value for gender" + value);
         }
       },
