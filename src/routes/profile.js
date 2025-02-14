@@ -6,10 +6,10 @@ const { validateEditProfileData } = require("../utils/validation");
 profileRouter.get("/profile/view", userAuth, async (req, res) => {
   try {
     const user = req.user;
-    console.log(user);
+    // console.log(user);
     if (!user) throw new Error("user not found");
 
-    console.log("user successfully logged in ");
+    // console.log("user successfully logged in ");
     res.send(user);
   } catch (error) {
     res.status(400).send(" error during loging " + error.message);
@@ -27,7 +27,7 @@ profileRouter.patch("/profile/edit", userAuth, async (req, res) => {
       loggedInUser[key] = req.body[key];
     });
     await loggedInUser.save();
-    console.log(loggedInUser)
+    // console.log(loggedInUser)
     res.send({ message:`${loggedInUser.firstName}, user profile updated successfully`,
     data:  loggedInUser});
     
