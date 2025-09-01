@@ -1,5 +1,8 @@
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
+require('dotenv').config()
+const JWT_SECRET = process.env.JWT_SECRET;
+
 
 const userAuth = async (req, res, next) => {
   //read token from req cookie
@@ -10,7 +13,7 @@ const userAuth = async (req, res, next) => {
   }
 
   //if token is valid then send user profile
-  const decodedObj = await jwt.verify(token, "Riteshy@dav89");
+  const decodedObj = await jwt.verify(token, JWT_SECRET);
 
   if (!decodedObj) return res.status(401).send("Unauthoreized token");
   //find the user by _id
