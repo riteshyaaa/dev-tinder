@@ -1,0 +1,120 @@
+# ===== DevTinder Load Test (Artillery) =====
+#
+# Install: npm install -g artillery
+# Run:     artillery run load-test.yml
+# Report:  artillery run load-test.yml --output report.json
+#          artillery report report.json
+#
+# Tests:
+# - Phase 1: Warm-up (10 users/sec for 30s)
+# - Phase 2: Ramp up (10 → 50 users/sec over 60s)
+# - Phase 3: Sustained load (50 users/sec for 60s)
+#
+# Target: http://localhost:3000 (change for production)
+
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 30
+      arrivalRate: 10
+      name: "Warm up"
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 50
+      name: "Ramp up"
+    - duration: 60
+      arrivalRate: 50
+      name: "Sustained load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+  payload:
+    path: "./load-test-data.csv"
+    fields:
+      - "email"
+      - "password"
+
+scenarios:
+  # Scenario 1: Health check (lightest)
+  - name: "Health Check"
+    weight: 20
+    flow:
+      - get:
+          url: "/health"
+          expect:
+            - statusCode: 200
+
+  # Scenario 2: Login + View Profile + Feed
+  - name: "Authenticated User Flow"
+    weight: 50
+    flow:
+      - post:
+          url: "/login"
+          json:
+            email: "alex.chen@devtinder.dev"
+            password: "Test@1234"
+          capture:
+            - json: "$"
+              as: "user"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/profile/view"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/feed?page=1&limit=10"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/user/connections?page=1&limit=10"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/user/requests/received"
+          expect:
+            - statusCode: 200
+
+  # Scenario 3: Feed with filters
+  - name: "Filtered Feed"
+    weight: 20
+    flow:
+      - post:
+          url: "/login"
+          json:
+            email: "jordan.patel@devtinder.dev"
+            password: "Test@1234"
+      - get:
+          url: "/feed?skills=React,Node.js&experienceLevel=mid&sortBy=smart"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/feed?skills=Python&location=Remote"
+          expect:
+            - statusCode: 200
+
+  # Scenario 4: Project & Challenge browsing
+  - name: "Browse Features"
+    weight: 10
+    flow:
+      - post:
+          url: "/login"
+          json:
+            email: "taylor.kim@devtinder.dev"
+            password: "Test@1234"
+      - get:
+          url: "/projects"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/challenges"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/activity/feed"
+          expect:
+            - statusCode: 200
+      - get:
+          url: "/profile/analytics?range=week"
+          expect:
+            - statusCode: 200
