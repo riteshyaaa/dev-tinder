@@ -82,3 +82,76 @@ authRouter.post("/logout", async (req, res) => {
 });
 
 module.exports = authRouter;
+
+
+const crypto = require("crypto");
+const { sendPasswordResetEmail } = require("../services/email");
+
+// In-memory token store (use Redis in production)
+const resetTokens = new Map();
+
+// POST /auth/forgot-password
+authRouter.post("/auth/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
+
+    const user = await User.findOne({ email: email.toLowerCase() });
+    if (!user) {
+      // Don't reveal if email exists (security)
+      return res.json({ message: "If the email exists, a reset code has been sent." });
+    }
+
+    // Generate 6-digit token
+    const token = crypto.randomInt(100000, 999999).toString();
+    resetTokens.set(email.toLowerCase(), {
+      token,
+      expires: Date.now() + 15 * 60 * 1000, // 15 minutes
+    });
+
+    // Send email
+    await sendPasswordResetEmail(email, token);
+
+    res.json({ message: "If the email exists, a reset code has been sent." });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// POST /auth/reset-password
+authRouter.post("/auth/reset-password", async (req, res) => {
+  try {
+    const { email, token, newPassword } = req.body;
+    if (!email || !token || !newPassword) {
+      return res.status(400).json({ error: "Email, token, and new password are required" });
+    }
+
+    const stored = resetTokens.get(email.toLowerCase());
+    if (!stored || stored.token !== token) {
+      return res.status(400).json({ error: "Invalid reset code" });
+    }
+    if (Date.now() > stored.expires) {
+      resetTokens.delete(email.toLowerCase());
+      return res.status(400).json({ error: "Reset code has expired. Please request a new one." });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: "Password must be at least 6 characters" });
+    }
+
+    const bcrypt = require("bcrypt");
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await User.findOneAndUpdate(
+      { email: email.toLowerCase() },
+      { password: hashedPassword }
+    );
+
+    // Cleanup token
+    resetTokens.delete(email.toLowerCase());
+
+    res.json({ message: "Password reset successfully" });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
