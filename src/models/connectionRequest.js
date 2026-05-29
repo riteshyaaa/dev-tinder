@@ -1,44 +1,39 @@
 const mongoose = require("mongoose");
 
-
-const connectionRequestSchema = new mongoose.Schema({
-  fromUserId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: "User",
-  },
-  toUserId: {
-    type: mongoose.Schema.Types.ObjectId,
-    required: true,
-    ref: "User",
-  },
-  status: {
-    type: String,
-    required: true,
-    enum: {
-      values: ["interested","ignored", "accepted", "rejected"],
-      message: "{VALUE} is not a valid status",
+const connectionRequestSchema = new mongoose.Schema(
+  {
+    fromUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+    toUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+      ref: "User",
+    },
+    status: {
+      type: String,
+      required: true,
+      enum: {
+        values: ["interested", "ignored", "accepted", "rejected"],
+        message: "{VALUE} is not a valid status",
+      },
     },
   },
-},{
-    timestamps:true,
-});
+  { timestamps: true }
+);
 
+connectionRequestSchema.index({ fromUserId: 1, toUserId: 1 });
+connectionRequestSchema.index({ toUserId: 1, status: 1 });
+connectionRequestSchema.index({ fromUserId: 1, status: 1 });
 
-connectionRequestSchema.index({fromUserId: 1, toUserId: 1})
-
-// Pre-save middleware to prevent duplicate connection requests with same user
-//pre('save') Middleware: Runs before saving a new connection request.
- connectionRequestSchema.pre("save", async function(next){
-  const connectionRequest = this;
-  if (connectionRequest.fromUserId.equals(connectionRequest.toUserId)) {
-    const error = new Error('fromUserId and toUserId cannot be the same.');
-    return next(error);
+// Prevent self-connections
+connectionRequestSchema.pre("save", function (next) {
+  if (this.fromUserId.equals(this.toUserId)) {
+    return next(new Error("Cannot send request to yourself"));
   }
-
-next()
-})
-
-
+  next();
+});
 
 module.exports = mongoose.model("ConnectionRequest", connectionRequestSchema);
