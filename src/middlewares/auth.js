@@ -1,28 +1,40 @@
 const User = require("../models/user");
 const jwt = require("jsonwebtoken");
-require('dotenv').config()
-const JWT_SECRET = process.env.JWT_SECRET;
-
+require("dotenv").config();
+const JWT_SECRET = process.env.JWT_SECRET || "Riteshy@dav89";
 
 const userAuth = async (req, res, next) => {
-  //read token from req cookie
-  const { token } = req.cookies;
+  try {
+    const { token } = req.cookies;
 
-  if (!token) {
-    return res.status(401).send("Please login");
+    if (!token) {
+      return res.status(401).json({ error: "Please login" });
+    }
+
+    const decodedObj = jwt.verify(token, JWT_SECRET);
+
+    if (!decodedObj) {
+      return res.status(401).json({ error: "Invalid token" });
+    }
+
+    const { _id } = decodedObj;
+    if (!_id) {
+      return res.status(401).json({ error: "Invalid token payload" });
+    }
+
+    const user = await User.findById(_id);
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
+
+    req.user = user;
+    next();
+  } catch (err) {
+    if (err.name === "JsonWebTokenError" || err.name === "TokenExpiredError") {
+      return res.status(401).json({ error: "Session expired. Please login again." });
+    }
+    return res.status(500).json({ error: "Authentication failed" });
   }
-
-  //if token is valid then send user profile
-  const decodedObj = await jwt.verify(token, JWT_SECRET);
-
-  if (!decodedObj) return res.status(401).send("Unauthoreized token");
-  //find the user by _id
-  const { _id } = decodedObj;
-  if (!_id) return res.status(401).send("User not found ");
-  const user = await User.findOne({ _id });
-  if (!user) return res.status(404).send("User not found");
-  req.user = user;
-  next();
 };
 
 module.exports = {

@@ -3,8 +3,8 @@ const requestRouter = express.Router();
 const { userAuth } = require("../middlewares/auth.js");
 const ConnectionRequest = require("../models/connectionRequest.js");
 const User = require("../models/user");
-const connectionRequest = require("../models/connectionRequest.js");
 
+// ==================== POST /request/send/:status/:toUserId ====================
 requestRouter.post(
   "/request/send/:status/:toUserId",
   userAuth,
@@ -14,61 +14,94 @@ requestRouter.post(
       const toUserId = req.params.toUserId;
       const status = req.params.status;
 
-      const allowedStatus = ["interested", "ignored"];
+      const allowedStatus = ["interested", "ignored", "superlike"];
       if (!allowedStatus.includes(status)) {
-        return res.status(400).send(`${status} is not valid`);
+        return res.status(400).json({ error: `${status} is not a valid status` });
       }
 
       const toUser = await User.findById(toUserId);
       if (!toUser) {
-        return res.status(404).json({
-          Error: "userId not valid",
-        });
+        return res.status(404).json({ error: "User not found" });
       }
 
+      // Check for existing request
       const existingRequest = await ConnectionRequest.findOne({
         $or: [
-          {
-            fromUserId,
-            toUserId,
-          },
-          {
-            fromUserId: toUserId,
-            toUserId: fromUserId,
-          },
+          { fromUserId, toUserId },
+          { fromUserId: toUserId, toUserId: fromUserId },
         ],
       });
+
       if (existingRequest) {
-        return res.status(200).send("Connection already established");
+        // Check if this creates a mutual match
+        if (
+          existingRequest.fromUserId.toString() === toUserId &&
+          existingRequest.status === "interested" &&
+          (status === "interested" || status === "superlike")
+        ) {
+          // It's a match! Both users are interested
+          existingRequest.status = "accepted";
+          await existingRequest.save();
+          return res.json({
+            message: "It's a match!",
+            data: existingRequest,
+            isMatch: true,
+          });
+        }
+        return res.status(400).json({ error: "Connection request already exists" });
       }
 
+      // Save the connection request (store superlike as "interested" with a flag)
       const connectionRequest = new ConnectionRequest({
         fromUserId,
         toUserId,
-        status,
+        status: status === "superlike" ? "interested" : status,
       });
 
       const data = await connectionRequest.save();
+
+      // Check if the OTHER user already sent an "interested" request to us
+      // (they swiped right on us before we swiped on them)
+      const reverseRequest = await ConnectionRequest.findOne({
+        fromUserId: toUserId,
+        toUserId: fromUserId,
+        status: "interested",
+      });
+
+      let isMatch = false;
+      if (reverseRequest && (status === "interested" || status === "superlike")) {
+        // Mutual interest detected — auto-accept both
+        reverseRequest.status = "accepted";
+        await reverseRequest.save();
+        data.status = "accepted";
+        await data.save();
+        isMatch = true;
+      }
+
       res.json({
-        message: "Request sent successfully",
+        message: isMatch ? "It's a match!" : "Request sent successfully",
         data,
+        isMatch,
+        isSuperLike: status === "superlike",
       });
     } catch (err) {
-      res.status(400).send(" error during logging " + err.message);
+      res.status(400).json({ error: err.message });
     }
   }
 );
+
+// ==================== POST /request/review/:status/:requestId ====================
 requestRouter.post(
   "/request/review/:status/:requestId",
   userAuth,
   async (req, res) => {
     try {
       const loggedInUser = req.user;
-      const {status,requestId} = req.params;
-     
+      const { status, requestId } = req.params;
+
       const allowedStatus = ["accepted", "rejected"];
       if (!allowedStatus.includes(status)) {
-        return res.status(400).send(" status not valid" + err.message);
+        return res.status(400).json({ error: "Invalid status" });
       }
 
       const connectionRequest = await ConnectionRequest.findOne({
@@ -76,18 +109,48 @@ requestRouter.post(
         toUserId: loggedInUser._id,
         status: "interested",
       });
+
       if (!connectionRequest) {
-        return res.status(404).send(` ${status} Request not found `);
+        return res.status(404).json({ error: "Request not found" });
       }
+
       connectionRequest.status = status;
       const data = await connectionRequest.save();
+
       res.json({
         message: `Request ${status} successfully`,
         data,
       });
     } catch (err) {
-      res.status(400).send("Error occure during :" + err.message);
+      res.status(400).json({ error: err.message });
     }
   }
 );
+
+// ==================== POST /request/undo/:userId ====================
+requestRouter.post("/request/undo/:userId", userAuth, async (req, res) => {
+  try {
+    const fromUserId = req.user._id;
+    const toUserId = req.params.userId;
+
+    // Find and remove the most recent "ignored" request from this user to target
+    const deletedRequest = await ConnectionRequest.findOneAndDelete({
+      fromUserId,
+      toUserId,
+      status: "ignored",
+    }).sort({ createdAt: -1 });
+
+    if (!deletedRequest) {
+      return res.status(404).json({ error: "No ignored request to undo" });
+    }
+
+    res.json({
+      message: "Swipe undone successfully",
+      data: deletedRequest,
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
 module.exports = requestRouter;

@@ -5,45 +5,61 @@ const User = require("../models/user.js");
 
 const userRouter = express.Router();
 
-const USER_SAFE_DATA = ["firstName", "lastName", "age", "about", "skills" ,"photoUrl"];
+const USER_SAFE_DATA = [
+  "firstName", "lastName", "age", "about", "skills", "photoUrl",
+  "gender", "experienceLevel", "location", "currentlyBuilding",
+  "availability", "lookingFor", "socialLinks", "github", "portfolio",
+  "lastActive", "isBoosted",
+];
+
+// ==================== GET /user/requests/received ====================
 userRouter.get("/user/requests/received", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
-    // Fetching all the connection requests where the logged in user is the receiver and pending request( status is "interested")
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
 
-    const connectionRequest = await ConnectionRequest.find({
+    const connectionRequests = await ConnectionRequest.find({
       toUserId: loggedInUser._id,
       status: "interested",
-    }).populate("fromUserId", ["firstName", "lastName","age", "about", "photoUrl", "skills"]);
+    })
+      .populate("fromUserId", USER_SAFE_DATA)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
     res.json({
-      message: "User connections fetched successfully",
-      data: connectionRequest,
+      message: "Connection requests fetched successfully",
+      data: connectionRequests,
     });
   } catch (err) {
-    res.status(400).send("error during logging" + err.message);
+    res.status(400).json({ error: err.message });
   }
 });
 
+// ==================== GET /user/connections ====================
 userRouter.get("/user/connections", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
-    const connectionRequest = await ConnectionRequest.find({
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 20;
+    const skip = (page - 1) * limit;
+
+    const connectionRequests = await ConnectionRequest.find({
       $or: [
-        {
-          toUserId: loggedInUser._id,
-          status: "accepted",
-        },
-        {
-          fromUserId: loggedInUser._id,
-          status: "accepted",
-        },
+        { toUserId: loggedInUser._id, status: "accepted" },
+        { fromUserId: loggedInUser._id, status: "accepted" },
       ],
     })
       .populate("fromUserId", USER_SAFE_DATA)
-      .populate("toUserId", USER_SAFE_DATA);
+      .populate("toUserId", USER_SAFE_DATA)
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limit);
 
-    const data = connectionRequest.map((row) => {
-      if (row.fromUserId._id.toString() == loggedInUser._id) {
+    const data = connectionRequests.map((row) => {
+      if (row.fromUserId._id.toString() === loggedInUser._id.toString()) {
         return row.toUserId;
       } else {
         return row.fromUserId;
@@ -52,9 +68,11 @@ userRouter.get("/user/connections", userAuth, async (req, res) => {
 
     res.json({ data });
   } catch (err) {
-    res.status(400).send("error during get connections request" + err.message);
+    res.status(400).json({ error: err.message });
   }
 });
+
+// ==================== GET /feed ====================
 userRouter.get("/feed", userAuth, async (req, res) => {
   try {
     const loggedInUser = req.user;
@@ -62,40 +80,98 @@ userRouter.get("/feed", userAuth, async (req, res) => {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
+
+    // Query params from frontend filters
+    const { skills, experienceLevel, location, smartMatch, sortBy } = req.query;
+
+    // Get all existing connections/requests to exclude
     const connectionRequests = await ConnectionRequest.find({
       $or: [
-        {
-          toUserId: loggedInUser._id,
-        },
-        {
-          fromUserId: loggedInUser._id,
-        },
+        { toUserId: loggedInUser._id },
+        { fromUserId: loggedInUser._id },
       ],
     }).select("fromUserId toUserId");
 
-    const hideUserData = new Set();
+    const hideUserIds = new Set();
     connectionRequests.forEach((row) => {
-      hideUserData.add(row.toUserId.toString());
-      hideUserData.add(row.fromUserId.toString());
+      hideUserIds.add(row.toUserId.toString());
+      hideUserIds.add(row.fromUserId.toString());
     });
 
-    const users = await User.find({
-      $and: [
-        {
-          _id: { $nin: Array.from(hideUserData) },
-        },
-        { _id: { $ne: loggedInUser._id } },
-      ],
-    })
+    // Build filter query
+    const filterQuery = {
+      _id: { $nin: [...Array.from(hideUserIds), loggedInUser._id] },
+    };
+
+    // Skill filter
+    if (skills) {
+      const skillArray = skills.split(",").map((s) => s.trim()).filter(Boolean);
+      if (skillArray.length > 0) {
+        filterQuery.skills = { $in: skillArray };
+      }
+    }
+
+    // Experience level filter
+    if (experienceLevel) {
+      filterQuery.experienceLevel = experienceLevel;
+    }
+
+    // Location filter (case-insensitive partial match)
+    if (location) {
+      filterQuery.location = { $regex: location, $options: "i" };
+    }
+
+    // Smart Match: find users with COMPLEMENTARY skills (skills the logged-in user does NOT have)
+    if (smartMatch === "true" && loggedInUser.skills && loggedInUser.skills.length > 0) {
+      // Show users who have skills the current user doesn't
+      filterQuery.skills = {
+        ...filterQuery.skills,
+        $nin: undefined, // Remove if set
+        $not: { $size: 0 }, // Must have at least some skills
+      };
+      // Prefer users with different skills — we'll sort by this later
+      delete filterQuery.skills;
+      filterQuery.$and = [
+        { _id: { $nin: [...Array.from(hideUserIds), loggedInUser._id] } },
+        { skills: { $exists: true, $ne: [] } },
+      ];
+      // Remove redundant _id filter
+      delete filterQuery._id;
+    }
+
+    // Build sort options
+    let sortOptions = { lastActive: -1 }; // Default: recently active first
+
+    if (sortBy === "smart") {
+      // Smart sort: boosted users first → recently active → complete profiles
+      sortOptions = { isBoosted: -1, lastActive: -1 };
+    }
+
+    // Expire boosts that have passed
+    await User.updateMany(
+      { isBoosted: true, boostExpiresAt: { $lt: new Date() } },
+      { $set: { isBoosted: false, boostExpiresAt: null } }
+    );
+
+    const users = await User.find(filterQuery)
       .select(USER_SAFE_DATA)
+      .sort(sortOptions)
       .skip(skip)
       .limit(limit);
-     
-    res.send(users);
+
+    // Increment profile views for displayed users
+    const userIds = users.map((u) => u._id);
+    if (userIds.length > 0) {
+      await User.updateMany(
+        { _id: { $in: userIds } },
+        { $inc: { profileViews: 1 } }
+      );
+    }
+
+    res.json(users);
   } catch (err) {
-    res.status(400).json({
-      message: err.message,
-    });
+    res.status(400).json({ error: err.message });
   }
 });
+
 module.exports = userRouter;
