@@ -1,0 +1,22 @@
+# ===== Render.com Blueprint for DevTinder Backend =====
+# Deploy with one click: connect this repo on Render Dashboard
+
+services:
+  - type: web
+    name: devtinder-api
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: node src/app.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        sync: false
+      - key: PORT
+        value: 3000
